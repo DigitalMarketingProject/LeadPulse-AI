@@ -2,7 +2,7 @@ services:
   - type: web
     name: leadpulse-ai
     runtime: docker
-    plan: starter
+    plan: free
     dockerfilePath: ./Dockerfile
     dockerContext: .
     healthCheckPath: /
@@ -15,6 +15,10 @@ services:
         sync: false
       - key: DB_PASSWORD
         sync: false
+      - key: DB_DRIVER
+        value: org.postgresql.Driver
+      - key: DB_DIALECT
+        value: org.hibernate.dialect.PostgreSQLDialect
       - key: LEADPULSE_BOOTSTRAP_KEY
         sync: false
       - key: LEADPULSE_ADMIN_USERNAME

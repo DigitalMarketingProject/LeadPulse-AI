@@ -1,87 +1,89 @@
-# First deployment: Render + Aiven MySQL
+# Free demo deployment: Render + Neon PostgreSQL
 
-This project is a Spring Boot application that serves both Thymeleaf pages and REST APIs.
-Deploy it as a Render **Web Service** using the included Dockerfile, not as a Static Site.
-The production profile is currently configured for MySQL, so Aiven MySQL avoids an
-unnecessary database-driver and schema conversion.
+LeadPulse AI is a Spring Boot application that serves Thymeleaf pages and REST APIs.
+Deploy it to Render as a Docker **Web Service**, not as a Static Site. For a free demo,
+use Neon PostgreSQL. This requires no-cost-tier caveats and a PostgreSQL schema migration;
+it is not a durable production setup.
 
-## 1. Create the database in Aiven
+## Free-tier limitations to understand first
 
-1. Create an Aiven MySQL service and database.
-2. Create/use a restricted application database user.
-3. Enable SSL/TLS and keep Aiven's CA certificate/private connection details safe.
-4. Copy the JDBC connection information. `DB_URL` must be a JDBC URL of the form:
+- Render's free web service spins down after inactivity, so the first request can be slow.
+- Neon Free compute scales to zero, and its free plan has strict storage, compute, history,
+  and egress limits. Review the current plan limits before using real traffic.
+- Free databases may be unsuitable for backups, availability guarantees, or important data.
+- Do not store real customer or visitor data in this demonstration setup.
+- Upgrade both services and configure backups before any real business use.
+
+## 1. Create a Neon PostgreSQL project
+
+1. Create a Neon project and database.
+2. In Neon Console, select **Connect** and copy the pooled connection host for your branch.
+   The pooled host usually contains `-pooler`.
+3. Do not expose the connection password or paste it into source code.
+4. Convert the Neon connection details into the JDBC format:
 
    ```text
-   jdbc:mysql://MYSQL_HOST:MYSQL_PORT/DATABASE_NAME?sslMode=REQUIRED
+   jdbc:postgresql://POOLER_HOST/DB_NAME?sslmode=require
    ```
 
-5. Run `src/main/resources/db/production-schema-mysql.sql` against the new, empty database
-   using Aiven's query console or a trusted SQL client. Do not run it against an existing
-   production database without first reviewing and backing that database up.
+   Keep username and password in separate environment variables. Do not include them in
+   `DB_URL`. Use Neon-provided host, database, role, and password values.
+5. Run `src/main/resources/db/production-schema-postgresql.sql` against a new, empty Neon
+   database using the Neon SQL Editor or a trusted PostgreSQL client.
 
-The deployed application uses `ddl-auto=validate`; it will not silently create or mutate the
-production schema.
+The production profile uses `ddl-auto=validate`: it checks the existing schema and does not
+automatically create or mutate production tables.
 
-## 2. Create a private GitHub repository
+## 2. Deploy from GitHub to Render
 
-1. Create a **private** repository on GitHub.
-2. Do not upload `.env` files, database dumps, certificates, API keys, or passwords.
-3. From this folder, initialize and push the branch:
+1. Confirm the latest project changes, including the PostgreSQL driver and schema file, have
+   been pushed to the private repository.
+2. In Render, choose **New > Blueprint** and connect
+   [DigitalMarketingProject/LeadPulse-AI](https://github.com/DigitalMarketingProject/LeadPulse-AI).
+3. Render should detect `render.yaml` and configure a free Docker Web Service.
+4. Set all secret environment variables in Render's environment settings. Never put secrets in
+   GitHub or `render.yaml`.
+5. Deploy and wait for the build and health check.
+6. Open the assigned `onrender.com` URL and verify the homepage returns HTTP 200.
 
-   ```powershell
-   cd C:\Marketing\marketingleadscoring
-   git init -b main
-   git add .
-   git status --short
-   git commit -m "Prepare LeadPulse AI for deployment"
-   git remote add origin https://github.com/YOUR_ACCOUNT/YOUR_REPOSITORY.git
-   git push -u origin main
-   ```
+## 3. Render environment variables
 
-Review `git status` before committing. Never commit credentials. If a secret was committed,
-rotate it; removing it in a later commit is not enough.
-
-## 3. Deploy the Render Web Service
-
-1. In Render, choose **New > Blueprint** and connect the private GitHub repository, or create
-   a Docker Web Service using the repository's Dockerfile.
-2. The included `render.yaml` defines the production profile and lists the secret environment
-   variables Render must request.
-3. Add the environment variables described below in Render. Do not place secret values in
-   `render.yaml` or GitHub.
-4. Deploy. Render builds the Java 21 image and starts Spring Boot on Render's assigned `PORT`.
-5. Confirm the service is healthy at its `onrender.com` URL and the homepage returns HTTP 200.
-
-## 4. Required Render environment variables
-
-| Variable | Purpose |
+| Variable | Value |
 |---|---|
-| `SPRING_PROFILES_ACTIVE` | Must be `production` |
-| `DB_URL` | Aiven JDBC URL with SSL required |
-| `DB_USERNAME` | Aiven database username |
-| `DB_PASSWORD` | Aiven database password |
-| `LEADPULSE_BOOTSTRAP_KEY` | Random, high-entropy administrative provisioning secret |
-| `LEADPULSE_ADMIN_USERNAME` | Administrative UI username |
-| `LEADPULSE_ADMIN_PASSWORD_BCRYPT` | BCrypt hash of a unique strong password |
-| `LEADPULSE_ALLOWED_ORIGINS` | Comma-separated exact HTTPS browser origins; never `*` |
+| `SPRING_PROFILES_ACTIVE` | `production` |
+| `DB_URL` | Neon JDBC URL using the pooled host and `sslmode=require` |
+| `DB_USERNAME` | Neon role/user |
+| `DB_PASSWORD` | Neon database password |
+| `DB_DRIVER` | `org.postgresql.Driver` |
+| `DB_DIALECT` | `org.hibernate.dialect.PostgreSQLDialect` |
+| `LEADPULSE_BOOTSTRAP_KEY` | Strong, randomly generated secret |
+| `LEADPULSE_ADMIN_USERNAME` | Chosen admin username |
+| `LEADPULSE_ADMIN_PASSWORD_BCRYPT` | BCrypt hash of a strong password |
+| `LEADPULSE_ALLOWED_ORIGINS` | Exact HTTPS origins; never `*` |
 
-`DB_DRIVER` and `DB_DIALECT` default to MySQL values. `PORT` is supplied by Render.
-Generate and store all secrets in Render's environment/secrets UI. Use a trusted BCrypt
-generator for the administrator password; do not paste a plaintext password into the
-deployment manifest or source tree.
+Render supplies `PORT` automatically. The Render Blueprint sets the driver and dialect. Keep
+`DB_URL`, username, password, and application secrets in Render's protected environment
+settings. The admin password environment value must be a BCrypt hash, not the plaintext
+password.
 
-## 5. Important launch limitations
+## 4. Check deployment logs
 
-- The production UI uses one configured platform admin, not separate company user accounts.
-- The built-in rate limiter is in-memory and only coordinates one application instance.
-- Organization API keys are server-side secrets. Do not embed them in public website JavaScript.
-- The local browser tracker currently uses the organization key and is development-only.
-- Webhook HMAC currently uses the organization API key as the signing secret.
-- Configure Aiven backups, Render health alerts, and a recovery procedure before storing
-  real customer information.
-- Check applicable privacy/consent requirements and obtain legal guidance before tracking
-  production visitors.
+If the service fails its startup or schema-validation check:
 
-The production profile, privacy endpoints, and application security provide a deployment
-baseline, not a security certification or a substitute for a production readiness review.
+1. Confirm the Neon schema SQL was run against the correct database.
+2. Confirm `DB_URL` starts with `jdbc:postgresql://` and includes `sslmode=require`.
+3. Confirm the database username/password and driver/dialect environment variables.
+4. Review Render logs and share only the error text after removing hostnames, usernames,
+   passwords, API keys, and tokens.
+
+## 5. Before using real data
+
+- Use paid persistent compute and database tiers, and verify backup and restore procedures.
+- The production UI currently has one platform admin, not separate company users.
+- The in-memory rate limiter only works across one application instance.
+- Do not place organization API keys in public browser JavaScript. The current browser tracker
+  is local-development-only; use server-to-server webhook calls for testing.
+- Webhook HMAC currently uses the organization API key as its signing secret.
+- Establish visitor consent, privacy notices, retention, export, and deletion procedures.
+
+This guide prepares a learning/demo deployment, not a production security certification.
