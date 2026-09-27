@@ -1,0 +1,25 @@
+services:
+  - type: web
+    name: leadpulse-ai
+    runtime: docker
+    plan: starter
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: production
+      - key: DB_URL
+        sync: false
+      - key: DB_USERNAME
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
+      - key: LEADPULSE_BOOTSTRAP_KEY
+        sync: false
+      - key: LEADPULSE_ADMIN_USERNAME
+        sync: false
+      - key: LEADPULSE_ADMIN_PASSWORD_BCRYPT
+        sync: false
+      - key: LEADPULSE_ALLOWED_ORIGINS
+        sync: false

@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard | LeadPulse AI</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/dashboard.css}">
+</head>
+
+<body>
+
+<div class="sidebar">
+    <h3><i class="fa-solid fa-chart-line me-2"></i>LeadPulse AI</h3>
+
+    <a href="/dashboard" class="active">
+        <i class="fa-solid fa-house"></i>
+        Dashboard
+    </a>
+
+    <a href="/customers-page">
+        <i class="fa-solid fa-users"></i>
+        Customers
+    </a>
+
+    <a href="/campaigns">
+        <i class="fa-solid fa-bullhorn"></i>
+        Campaigns
+    </a>
+
+    <a href="/activities">
+        <i class="fa-solid fa-chart-line"></i>
+        Activities
+    </a>
+
+    <a href="/reports">
+        <i class="fa-solid fa-file-waveform"></i>
+        Reports
+    </a>
+
+    <a href="/integrations">
+        <i class="fa-solid fa-plug"></i>
+        Integrations
+    </a>
+
+    <a href="/" class="mt-4">
+        <i class="fa-solid fa-arrow-left"></i>
+        Home Page
+    </a>
+</div>
+
+<div class="content">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h2 mb-1">Marketing Intelligence Dashboard</h1>
+            <p class="text-muted">Real-time digital marketing KPIs, lead scoring, and campaign analytics.</p>
+        </div>
+        <div>
+            <a href="/export/excel" class="btn btn-outline-success me-2">
+                <i class="fa-solid fa-file-excel me-1"></i> Export Excel
+            </a>
+            <a href="/export/pdf" class="btn btn-outline-danger">
+                <i class="fa-solid fa-file-pdf me-1"></i> Export PDF
+            </a>
+        </div>
+    </div>
+
+    <!-- Quick Stats Cards -->
+    <div class="row g-3">
+        <div class="col-md-3">
+            <div class="card stat-card shadow-sm border-start border-primary border-4">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-muted text-uppercase mb-1">Total Leads</h6>
+                        <h2 class="mb-0 fw-bold" th:text="${customers}">0</h2>
+                    </div>
+                    <i class="fa-solid fa-users fa-2x text-primary opacity-50"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card stat-card shadow-sm border-start border-success border-4">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-muted text-uppercase mb-1">Active Campaigns</h6>
+                        <h2 class="mb-0 fw-bold">
+                            <span th:text="${runningCampaigns}">0</span>
+                            <small class="fs-6 text-muted">/ <span th:text="${campaigns}">0</span></small>
+                        </h2>
+                    </div>
+                    <i class="fa-solid fa-bullhorn fa-2x text-success opacity-50"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card stat-card shadow-sm border-start border-danger border-4">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-muted text-uppercase mb-1">Hot Leads</h6>
+                        <h2 class="mb-0 fw-bold text-danger" th:text="${hot}">0</h2>
+                    </div>
+                    <i class="fa-solid fa-fire fa-2x text-danger opacity-50"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card stat-card shadow-sm border-start border-info border-4">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-muted text-uppercase mb-1">Conversion Rate</h6>
+                        <h2 class="mb-0 fw-bold text-info"><span th:text="${conversionRate}">0</span>%</h2>
+                    </div>
+                    <i class="fa-solid fa-chart-pie fa-2x text-info opacity-50"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Secondary Metrics -->
+    <div class="row g-3 mt-1">
+        <div class="col-md-4">
+            <div class="card shadow-sm p-3">
+                <div class="text-muted small">Total Marketing Budget</div>
+                <h4 class="fw-bold mt-1 text-primary">₹ <span th:text="${budget}">0.0</span></h4>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card shadow-sm p-3">
+                <div class="text-muted small">Average Lead Score</div>
+                <h4 class="fw-bold mt-1 text-success"><span th:text="${averageLead}">0.0</span> / 100</h4>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card shadow-sm p-3">
+                <div class="text-muted small">Logged Activities</div>
+                <h4 class="fw-bold mt-1 text-dark"><span th:text="${activities}">0</span> Touchpoints</h4>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts -->
+    <div class="row mt-4 g-3">
+        <div class="col-lg-6">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <h5 class="card-title fw-bold">Lead Status Distribution</h5>
+                    <div style="height: 280px; position: relative;">
+                        <canvas id="leadChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <h5 class="card-title fw-bold">Lead Volume Breakdown</h5>
+                    <div style="height: 280px; position: relative;">
+                        <canvas id="statusChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow-sm mt-4">
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div>
+                    <h5 class="card-title fw-bold mb-1">
+                        <i class="fa-solid fa-user-funnel text-primary me-2"></i>Visitor-to-Lead Funnel
+                    </h5>
+                    <p class="text-muted mb-0">Organization-scoped tracking activity from connected websites.</p>
+                </div>
+                <button id="loadTrackingAnalytics" class="btn btn-outline-primary btn-sm">Refresh</button>
+            </div>
+            <div id="trackingAnalytics" class="text-muted">
+                Connected-site analytics are available through the organization-authenticated API.
+                See <a href="/integrations">Integration Setup</a>; never place the organization secret
+                in public website JavaScript.
+            </div>
+        </div>
+    </div>
+
+    <!-- Top Leads Table -->
+    <div class="card shadow-sm mt-4">
+        <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+            <h5 class="mb-0"><i class="fa-solid fa-star text-warning me-2"></i>Top High-Intent Leads</h5>
+            <a href="/customers-page" class="btn btn-outline-light btn-sm">View All Customers</a>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                    <tr>
+                        <th>Name</th>
+                        <th>Company</th>
+                        <th>Email</th>
+                        <th>Lead Score</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:if="${#lists.isEmpty(recentCustomers)}">
+                        <td colspan="6" class="text-center py-4 text-muted">No customer leads found yet.</td>
+                    </tr>
+                    <tr th:each="c : ${recentCustomers}">
+                        <td class="fw-semibold" th:text="${c.name}">Name</td>
+                        <td th:text="${c.company}">Company</td>
+                        <td th:text="${c.email}">Email</td>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <span class="fw-bold me-2" th:text="${c.leadScore}">0</span>
+                                <div class="progress flex-grow-1" style="height: 6px; width: 60px;">
+                                    <div class="progress-bar"
+                                         th:classappend="${c.leadScore >= 80} ? 'bg-danger' : (${c.leadScore >= 50} ? 'bg-warning' : 'bg-success')"
+                                         th:style="'width: ' + ${c.leadScore} + '%;'"></div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="badge"
+                                  th:classappend="${c.leadStatus=='Hot'} ? 'bg-danger' :
+                                  (${c.leadStatus=='Warm'} ? 'bg-warning text-dark' : 'bg-success')"
+                                  th:text="${c.leadStatus}">
+                                Status
+                            </span>
+                        </td>
+                        <td>
+                            <a th:href="@{/edit/{id}(id=${c.id})}" class="btn btn-outline-primary btn-sm">
+                                <i class="fa-solid fa-pen-to-square"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow-sm mt-4 border-start border-primary border-4">
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h5 class="mb-1"><i class="fa-solid fa-wave-square text-primary me-2"></i>Lead Momentum</h5>
+                    <p class="text-muted mb-0">Explainable intent signals and next-best action for your top lead.</p>
+                </div>
+                <a id="momentumLeadLink" href="/customers-page" class="btn btn-outline-primary btn-sm">Open lead</a>
+            </div>
+            <div id="momentumInsight" class="mt-3 text-muted">Loading the latest intent insight...</div>
+        </div>
+    </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script th:inline="javascript">
+    const hot = /*[[${hot}]]*/ 0;
+    const warm = /*[[${warm}]]*/ 0;
+    const cold = /*[[${cold}]]*/ 0;
+
+    /* Lead Distribution Doughnut */
+    new Chart(document.getElementById("leadChart"), {
+        type: "doughnut",
+        data: {
+            labels: ["Hot Leads", "Warm Pipeline", "Cold Leads"],
+            datasets: [{
+                data: [hot, warm, cold],
+                backgroundColor: ["#dc3545", "#ffc107", "#198754"]
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false
+        }
+    });
+
+    /* Status Bar Chart */
+    new Chart(document.getElementById("statusChart"), {
+        type: "bar",
+        data: {
+            labels: ["Hot (>=80)", "Warm (50-79)", "Cold (<50)"],
+            datasets: [{
+                label: "Lead Count",
+                data: [hot, warm, cold],
+                backgroundColor: ["#dc3545", "#ffc107", "#198754"],
+                borderRadius: 6
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: { precision: 0 }
+                }
+            }
+        }
+    });
+
+    const topLead = /*[[${recentCustomers != null and !#lists.isEmpty(recentCustomers) ? recentCustomers[0].id : null}]]*/ null;
+    if (topLead) {
+        fetch(`/api/analytics/customer/${topLead}/insights`)
+            .then(response => response.ok ? response.json() : Promise.reject(response.status))
+            .then(insight => {
+                document.getElementById("momentumLeadLink").href = `/edit/${insight.customerId}`;
+                document.getElementById("momentumInsight").innerHTML =
+                    `<strong>${insight.customerName || "Lead"}</strong> is <strong>${insight.momentum}</strong> ` +
+                    `(${insight.recentActivities} activities in 7 days vs ${insight.previousActivities} in the prior period). ` +
+                    `<span class="d-block mt-2"><strong>Next best action:</strong> ${insight.nextBestAction}</span>`;
+            })
+            .catch(() => {
+                document.getElementById("momentumInsight").textContent = "Lead momentum is unavailable right now.";
+            });
+    } else {
+        document.getElementById("momentumInsight").textContent = "Add a lead to start tracking momentum.";
+    }
+
+    function loadTrackingAnalytics() {
+        const target = document.getElementById("trackingAnalytics");
+        target.innerHTML =
+            `Use the organization-authenticated analytics endpoint from a trusted backend: ` +
+            `<code>GET /api/analytics/tracking</code>. ` +
+            `<a href="/integrations">View secure integration instructions</a>.`;
+    }
+
+    document.getElementById("loadTrackingAnalytics").addEventListener("click", loadTrackingAnalytics);
+    loadTrackingAnalytics();
+</script>
+
+</body>
+</html>

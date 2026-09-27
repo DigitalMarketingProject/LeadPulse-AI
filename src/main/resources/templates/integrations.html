@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Integrations | LeadPulse AI</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/dashboard.css}">
+</head>
+<body>
+<div class="sidebar">
+    <h3><i class="fa-solid fa-chart-line me-2"></i>LeadPulse AI</h3>
+    <a href="/dashboard"><i class="fa-solid fa-house"></i> Dashboard</a>
+    <a href="/customers-page"><i class="fa-solid fa-users"></i> Customers</a>
+    <a href="/campaigns"><i class="fa-solid fa-bullhorn"></i> Campaigns</a>
+    <a href="/activities"><i class="fa-solid fa-chart-line"></i> Activities</a>
+    <a href="/reports"><i class="fa-solid fa-file-waveform"></i> Reports</a>
+    <a href="/integrations" class="active"><i class="fa-solid fa-plug"></i> Integrations</a>
+    <a href="/" class="mt-4"><i class="fa-solid fa-arrow-left"></i> Home Page</a>
+</div>
+
+<main class="content">
+    <div class="mb-4">
+        <h1 class="h2 mb-1">Website & CRM Integrations</h1>
+        <p class="text-muted">Connect your organization’s backend without exposing credentials to website visitors.</p>
+    </div>
+
+    <div class="alert alert-warning" role="alert">
+        <strong><i class="fa-solid fa-shield-halved me-2"></i>Keep API keys private.</strong>
+        Send integration requests from your server only. Do not embed the organization API key or webhook
+        signature secret in browser JavaScript, HTML, public repositories, or mobile apps.
+        The current browser tracker is for local development only because it uses the organization API key.
+    </div>
+
+    <section class="card shadow-sm mb-4">
+        <div class="card-body">
+            <h2 class="h5">1. Create or obtain an organization API key</h2>
+            <p>Use the organization provisioning endpoint in a trusted admin environment. Save the returned
+                key in your server’s secret manager or environment configuration; it is shown only once.</p>
+            <pre class="bg-light border rounded p-3 mb-0"><code>POST /api/organizations
+X-LeadPulse-Bootstrap-Key: &lt;bootstrap-secret&gt;
+Content-Type: application/json
+
+{"name":"Your Company"}</code></pre>
+        </div>
+    </section>
+
+    <section class="card shadow-sm mb-4">
+        <div class="card-body">
+            <h2 class="h5">2. Send events from your backend</h2>
+            <p>When your application receives a signup or form submission, your server can call:</p>
+            <pre class="bg-light border rounded p-3"><code>POST /api/integrations/lead-events
+X-LeadPulse-Api-Key: &lt;organization-api-key&gt;
+X-LeadPulse-Timestamp: &lt;current-unix-time-seconds&gt;
+X-LeadPulse-Signature: sha256=&lt;HMAC-SHA256-signature&gt;
+X-LeadPulse-Idempotency-Key: &lt;unique-event-id&gt;
+Content-Type: application/json
+
+{
+  "eventType": "FORM_SUBMITTED",
+  "visitorId": "visitor-id-from-consented-tracking",
+  "email": "person@example.com",
+  "name": "Prospect Name",
+  "company": "Example Ltd",
+  "pageUrl": "https://company.example/request-demo",
+  "consentGiven": true
+}</code></pre>
+            <p class="mb-0">Supported event types: <code>FORM_SUBMITTED</code>,
+                <code>DEMO_REQUESTED</code>, <code>ACCOUNT_CREATED</code>, and
+                <code>PURCHASE_COMPLETED</code>. Each event needs a fresh idempotency key and a timestamp
+                within five minutes of server time.</p>
+        </div>
+    </section>
+
+    <section class="card shadow-sm mb-4">
+        <div class="card-body">
+            <h2 class="h5">3. Sign the webhook on your server</h2>
+            <p>Generate the signature using HMAC-SHA256 with your organization API key and this exact
+                newline-separated canonical string:</p>
+            <pre class="bg-light border rounded p-3"><code>timestamp
+EVENT_TYPE_UPPERCASE
+visitorId
+email_lowercase
+name
+phone_or_empty
+company_or_empty
+pageUrl_or_empty</code></pre>
+            <p class="mb-0">Send the signature as <code>sha256=&lt;lowercase-hex-digest&gt;</code>.
+                Sign the normalized values shown above. Keep the API key in your server secret store.</p>
+        </div>
+    </section>
+
+    <section class="card shadow-sm mb-4">
+        <div class="card-body">
+            <h2 class="h5">4. Read organization tracking analytics</h2>
+            <pre class="bg-light border rounded p-3 mb-0"><code>GET /api/analytics/tracking
+X-LeadPulse-Api-Key: &lt;organization-api-key&gt;</code></pre>
+            <p class="mt-3 mb-0">The response includes event totals, unique visitors, identified visitors,
+                visitor-to-lead conversion, event types, and top pages. Call it from a trusted backend and
+                return only the necessary values to authenticated organization users.</p>
+        </div>
+    </section>
+
+    <section class="card shadow-sm">
+        <div class="card-body">
+            <h2 class="h5">5. Rotate or revoke a key</h2>
+            <p>Rotate a key from a trusted backend using the current key. The replacement is returned once
+                and the old key is invalidated.</p>
+            <pre class="bg-light border rounded p-3 mb-0"><code>POST /api/organizations/api-key/rotate
+X-LeadPulse-Api-Key: &lt;current-organization-api-key&gt;
+
+DELETE /api/organizations/api-key
+X-LeadPulse-Api-Key: &lt;current-organization-api-key&gt;</code></pre>
+        </div>
+    </section>
+</main>
+</body>
+</html>

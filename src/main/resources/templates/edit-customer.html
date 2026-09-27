@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Customer | LeadPulse AI</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" rel="stylesheet">
+</head>
+
+<body class="bg-light">
+
+<nav class="navbar navbar-dark bg-dark mb-4">
+    <div class="container">
+        <a class="navbar-brand fw-bold" href="/dashboard">
+            <i class="fa-solid fa-chart-line me-2 text-primary"></i>LeadPulse AI
+        </a>
+        <div>
+            <a href="/dashboard" class="btn btn-outline-light btn-sm me-2">Dashboard</a>
+            <a href="/customers-page" class="btn btn-primary btn-sm me-2">Customers</a>
+            <a href="/campaigns" class="btn btn-outline-light btn-sm me-2">Campaigns</a>
+            <a href="/activities" class="btn btn-outline-light btn-sm me-2">Activities</a>
+            <a href="/reports" class="btn btn-outline-light btn-sm">Reports</a>
+        </div>
+    </div>
+</nav>
+
+<div class="container pb-5" style="max-width: 800px;">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h2 mb-1">
+                <i class="fa-solid fa-user-pen text-primary me-2"></i>Edit Customer Lead
+            </h1>
+            <p class="text-muted">Update profile details and digital engagement metrics. Lead score will auto-recompute.</p>
+        </div>
+        <div class="text-end">
+            <span class="badge px-3 py-2 fs-6"
+                  th:classappend="${customer.leadStatus=='Hot'} ? 'bg-danger' :
+                  (${customer.leadStatus=='Warm'} ? 'bg-warning text-dark' : 'bg-success')">
+                <span th:text="${customer.leadStatus}">Status</span>
+                (<span th:text="${customer.leadScore}">0</span> pts)
+            </span>
+        </div>
+    </div>
+
+    <form th:action="@{/updateCustomer}" th:object="${customer}" method="post">
+        <input type="hidden" th:field="*{id}">
+
+        <!-- Contact Profile Card -->
+        <div class="card shadow-sm mb-4 border-0">
+            <div class="card-header bg-primary text-white py-3">
+                <h5 class="mb-0"><i class="fa-solid fa-id-card me-2"></i>Profile & Contact Information</h5>
+            </div>
+            <div class="card-body p-4">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Full Name</label>
+                        <input type="text" class="form-control" th:field="*{name}" required>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Email Address</label>
+                        <input type="email" class="form-control" th:field="*{email}" required>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Phone Number</label>
+                        <input type="text" class="form-control" th:field="*{phone}">
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Company</label>
+                        <input type="text" class="form-control" th:field="*{company}">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Digital Engagement Metrics Card -->
+        <div class="card shadow-sm mb-4 border-0">
+            <div class="card-header bg-dark text-white py-3">
+                <h5 class="mb-0"><i class="fa-solid fa-chart-simple me-2"></i>Digital Engagement Metrics</h5>
+            </div>
+            <div class="card-body p-4">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Email Clicks</label>
+                        <input type="number" min="0" class="form-control" th:field="*{emailClicks}">
+                        <div class="form-text">5 pts each (e.g. newsletter links)</div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Website Visits</label>
+                        <input type="number" min="0" class="form-control" th:field="*{websiteVisits}">
+                        <div class="form-text">3 pts each (landing pages & blogs)</div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Form Submissions</label>
+                        <input type="number" min="0" class="form-control" th:field="*{formSubmissions}">
+                        <div class="form-text">10 pts each (contact form, whitepaper)</div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Social Media Clicks</label>
+                        <input type="number" min="0" class="form-control" th:field="*{socialMediaClicks}">
+                        <div class="form-text">2 pts each (LinkedIn, Twitter ads)</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-success px-4">
+                <i class="fa-solid fa-floppy-disk me-1"></i> Update & Recompute Score
+            </button>
+            <a href="/customers-page" class="btn btn-secondary">Cancel</a>
+        </div>
+    </form>
+
+</div>
+
+</body>
+</html>

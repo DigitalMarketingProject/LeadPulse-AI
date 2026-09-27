@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lead Activities | LeadPulse AI</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" rel="stylesheet">
+</head>
+
+<body class="bg-light">
+
+<nav class="navbar navbar-dark bg-dark mb-4">
+    <div class="container">
+        <a class="navbar-brand fw-bold" href="/dashboard">
+            <i class="fa-solid fa-chart-line me-2 text-primary"></i>LeadPulse AI Activities
+        </a>
+        <div>
+            <a href="/dashboard" class="btn btn-outline-light btn-sm me-2">Dashboard</a>
+            <a href="/customers-page" class="btn btn-outline-light btn-sm me-2">Customers</a>
+            <a href="/campaigns" class="btn btn-outline-light btn-sm me-2">Campaigns</a>
+            <a href="/activities" class="btn btn-primary btn-sm me-2">Activities</a>
+            <a href="/reports" class="btn btn-outline-light btn-sm">Reports</a>
+        </div>
+    </div>
+</nav>
+
+<div class="container pb-5">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h2 mb-1">
+                <i class="fa-solid fa-bolt text-warning me-2"></i>Marketing Engagement Activities
+            </h1>
+            <p class="text-muted">Log customer touchpoints to automatically adjust intelligent lead scores in real time.</p>
+        </div>
+    </div>
+
+    <!-- Scoring Rules Info Banner -->
+    <div class="card bg-white shadow-sm mb-4 border-0">
+        <div class="card-body">
+            <h6 class="fw-bold text-primary mb-2">
+                <i class="fa-solid fa-circle-info me-1"></i> Automated Lead Score Impact Rules:
+            </h6>
+            <div class="row row-cols-2 row-cols-md-4 g-2 small">
+                <div class="col"><span class="badge bg-primary me-1">+30</span> Meeting</div>
+                <div class="col"><span class="badge bg-info text-dark me-1">+25</span> Product Demo</div>
+                <div class="col"><span class="badge bg-success me-1">+20</span> Phone Call</div>
+                <div class="col"><span class="badge bg-secondary me-1">+20</span> Campaign Response</div>
+                <div class="col"><span class="badge bg-warning text-dark me-1">+15</span> Form Filled</div>
+                <div class="col"><span class="badge bg-warning text-dark me-1">+15</span> Follow Up</div>
+                <div class="col"><span class="badge bg-dark me-1">+10</span> Link Click</div>
+                <div class="col"><span class="badge bg-light text-dark border me-1">+5</span> Email Open</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Activity Form -->
+    <div class="card shadow-sm mb-5 border-0">
+        <div class="card-header bg-primary text-white py-3">
+            <h5 class="mb-0"><i class="fa-solid fa-plus-circle me-2"></i>Log New Marketing Activity</h5>
+        </div>
+        <div class="card-body p-4">
+            <form th:action="@{/saveActivity}" th:object="${activity}" method="post">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Select Customer</label>
+                        <select class="form-select" th:field="*{customer}" id="customerSelect" onchange="updateCustomerName(this)">
+                            <option value="">-- Choose Existing Customer --</option>
+                            <option th:each="c : ${customers}"
+                                    th:value="${c.id}"
+                                    th:data-name="${c.name}"
+                                    th:text="${c.name} + ' (' + ${c.company} + ' - ' + ${c.email} + ')'">
+                            </option>
+                        </select>
+                        <input type="hidden" th:field="*{customerName}" id="customerNameHidden">
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Activity Type</label>
+                        <select class="form-select" th:field="*{activityType}" required>
+                            <option value="Meeting">Meeting (+30 pts)</option>
+                            <option value="Demo">Product Demo (+25 pts)</option>
+                            <option value="Phone Call">Phone Call (+20 pts)</option>
+                            <option value="Campaign Response">Campaign Response (+20 pts)</option>
+                            <option value="Form Filled">Form Filled (+15 pts)</option>
+                            <option value="Follow Up">Follow Up (+15 pts)</option>
+                            <option value="Link Click">Link Click (+10 pts)</option>
+                            <option value="Email Open">Email Open (+5 pts)</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-8">
+                        <label class="form-label fw-semibold">Remarks & Notes</label>
+                        <input type="text" class="form-control" th:field="*{remarks}" placeholder="e.g. Discussed enterprise trial terms and Q4 rollout.">
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label fw-semibold">Activity Date</label>
+                        <input type="date" class="form-control" th:field="*{activityDate}" required>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary mt-4 px-4">
+                    <i class="fa-solid fa-floppy-disk me-1"></i> Save Activity & Update Lead Score
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Activity History Table -->
+    <div class="card shadow-sm border-0">
+        <div class="card-header bg-dark text-white py-3 d-flex justify-content-between align-items-center">
+            <h5 class="mb-0"><i class="fa-solid fa-clock-rotate-left me-2"></i>Activity History</h5>
+            <span class="badge bg-secondary" th:text="${#lists.size(activities)} + ' Logged'">0 Logged</span>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                    <tr>
+                        <th style="width: 80px;">ID</th>
+                        <th>Customer</th>
+                        <th>Activity</th>
+                        <th>Remarks</th>
+                        <th>Date</th>
+                        <th style="width: 100px;">Action</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:if="${#lists.isEmpty(activities)}">
+                        <td colspan="6" class="text-center py-4 text-muted">No activities recorded yet.</td>
+                    </tr>
+                    <tr th:each="a : ${activities}">
+                        <td th:text="${a.id}">1</td>
+                        <td class="fw-semibold" th:text="${a.customer != null ? a.customer.name : a.customerName}">Customer</td>
+                        <td>
+                            <span class="badge"
+                                  th:classappend="${a.activityType=='Meeting'} ? 'bg-primary' :
+                                  (${a.activityType=='Demo'} ? 'bg-info text-dark' :
+                                  (${a.activityType=='Phone Call'} ? 'bg-success' :
+                                  (${a.activityType=='Campaign Response'} ? 'bg-secondary' :
+                                  (${a.activityType=='Form Filled'} ? 'bg-warning text-dark' : 'bg-light text-dark border'))))"
+                                  th:text="${a.activityType}">
+                                Activity
+                            </span>
+                        </td>
+                        <td th:text="${a.remarks != null ? a.remarks : '-'}">Remarks</td>
+                        <td th:text="${a.activityDate}">2026-09-23</td>
+                        <td>
+                            <form th:action="@{/deleteActivity/{id}(id=${a.id})}" method="post" class="d-inline"
+                                  onsubmit="return confirm('Are you sure you want to delete this activity? Customer lead score will be updated.')">
+                                <button type="submit" class="btn btn-outline-danger btn-sm">
+                                    <i class="fa-solid fa-trash"></i>
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    function updateCustomerName(select) {
+        const selected = select.options[select.selectedIndex];
+        const name = selected.getAttribute('data-name');
+        if (name) {
+            document.getElementById('customerNameHidden').value = name;
+        }
+    }
+
+    // Set today's date by default if empty
+    window.addEventListener('DOMContentLoaded', () => {
+        const dateInput = document.querySelector('input[type="date"]');
+        if (dateInput && !dateInput.value) {
+            dateInput.value = new Date().toISOString().split('T')[0];
+        }
+    });
+</script>
+
+</body>
+</html>

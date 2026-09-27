@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Customer Leads | LeadPulse AI</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" rel="stylesheet">
+</head>
+
+<body class="bg-light">
+
+<nav class="navbar navbar-dark bg-dark mb-4">
+    <div class="container">
+        <a class="navbar-brand fw-bold" href="/dashboard">
+            <i class="fa-solid fa-chart-line me-2 text-primary"></i>LeadPulse AI Customers
+        </a>
+        <div>
+            <a href="/dashboard" class="btn btn-outline-light btn-sm me-2">Dashboard</a>
+            <a href="/customers-page" class="btn btn-primary btn-sm me-2">Customers</a>
+            <a href="/campaigns" class="btn btn-outline-light btn-sm me-2">Campaigns</a>
+            <a href="/activities" class="btn btn-outline-light btn-sm me-2">Activities</a>
+            <a href="/reports" class="btn btn-outline-light btn-sm">Reports</a>
+        </div>
+    </div>
+</nav>
+
+<div class="container pb-5">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h2 mb-1">
+                <i class="fa-solid fa-users text-primary me-2"></i>Customer Lead Directory
+            </h1>
+            <p class="text-muted">Manage prospect profiles, track marketing scores, and capture contact information.</p>
+        </div>
+        <div>
+            <a href="/export/excel" class="btn btn-success btn-sm me-2">
+                <i class="fa-solid fa-file-excel me-1"></i> Excel
+            </a>
+            <a href="/export/pdf" class="btn btn-danger btn-sm">
+                <i class="fa-solid fa-file-pdf me-1"></i> PDF
+            </a>
+        </div>
+    </div>
+
+    <!-- Add Customer Form -->
+    <div class="card shadow-sm mb-4 border-0">
+        <div class="card-header bg-primary text-white py-3">
+            <h5 class="mb-0"><i class="fa-solid fa-user-plus me-2"></i>Add New Customer Lead</h5>
+        </div>
+        <div class="card-body p-4">
+            <form th:action="@{/saveCustomer}" th:object="${customer}" method="post">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Full Name</label>
+                        <input type="text" class="form-control" th:field="*{name}" placeholder="e.g. John Doe" required>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Email Address</label>
+                        <input type="email" class="form-control" th:field="*{email}" placeholder="e.g. john@enterprise.com" required>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Phone Number</label>
+                        <input type="text" class="form-control" th:field="*{phone}" placeholder="e.g. +91 9876543210">
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Company / Organization</label>
+                        <input type="text" class="form-control" th:field="*{company}" placeholder="e.g. TechCorp Solutions">
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary mt-4 px-4">
+                    <i class="fa-solid fa-floppy-disk me-1"></i> Save Customer & Calculate Lead Score
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Search Form -->
+    <form method="get" th:action="@{/customers-page}" class="row g-2 mb-4">
+        <div class="col-md-10">
+            <div class="input-group">
+                <span class="input-group-text bg-white border-end-0"><i class="fa-solid fa-magnifying-glass text-muted"></i></span>
+                <input type="text" class="form-control border-start-0" name="keyword" placeholder="Search customer by name..." th:value="${keyword}">
+            </div>
+        </div>
+        <div class="col-md-2">
+            <button class="btn btn-dark w-100">Search</button>
+        </div>
+    </form>
+
+    <!-- Customers Table -->
+    <div class="card shadow-sm border-0">
+        <div class="card-header bg-dark text-white py-3 d-flex justify-content-between align-items-center">
+            <h5 class="mb-0"><i class="fa-solid fa-address-book me-2"></i>Customer Leads</h5>
+            <span class="badge bg-secondary" th:text="${#lists.size(customers)} + ' Customers'">0 Customers</span>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                    <tr>
+                        <th style="width: 70px;">ID</th>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Phone</th>
+                        <th>Company</th>
+                        <th style="width: 140px;">Lead Score</th>
+                        <th>Status</th>
+                        <th style="width: 120px;">Actions</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:if="${#lists.isEmpty(customers)}">
+                        <td colspan="8" class="text-center py-4 text-muted">No customer leads found.</td>
+                    </tr>
+                    <tr th:each="c : ${customers}">
+                        <td th:text="${c.id}">1</td>
+                        <td class="fw-semibold" th:text="${c.name}">Name</td>
+                        <td th:text="${c.email}">Email</td>
+                        <td th:text="${c.phone != null ? c.phone : '-'}">Phone</td>
+                        <td th:text="${c.company != null ? c.company : '-'}">Company</td>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <span class="fw-bold me-2" th:text="${c.leadScore}">0</span>
+                                <div class="progress flex-grow-1" style="height: 6px;">
+                                    <div class="progress-bar"
+                                         th:classappend="${c.leadScore >= 80} ? 'bg-danger' : (${c.leadScore >= 50} ? 'bg-warning' : 'bg-success')"
+                                         th:style="'width: ' + ${c.leadScore} + '%;'"></div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="badge"
+                                  th:classappend="${c.leadStatus=='Hot'} ? 'bg-danger' :
+                                  (${c.leadStatus=='Warm'} ? 'bg-warning text-dark' : 'bg-success')"
+                                  th:text="${c.leadStatus}">
+                                Status
+                            </span>
+                        </td>
+                        <td>
+                            <a th:href="@{/edit/{id}(id=${c.id})}" class="btn btn-outline-primary btn-sm me-1" title="Edit Customer & Engagement">
+                                <i class="fa-solid fa-pen-to-square"></i>
+                            </a>
+                            <form th:action="@{/delete/{id}(id=${c.id})}" method="post" class="d-inline"
+                                  onsubmit="return confirm('Are you sure you want to delete this customer lead?')">
+                                <button type="submit" class="btn btn-outline-danger btn-sm" title="Delete Customer">
+                                    <i class="fa-solid fa-trash"></i>
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+</body>
+</html>
